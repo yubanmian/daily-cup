@@ -28,20 +28,34 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  // Increase limit for base64 images
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  // Debug middleware
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+  });
 
   // API Routes
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   app.get("/api/records", (req, res) => {
     const records = db.prepare("SELECT * FROM drink_records ORDER BY timestamp DESC").all();
     res.json(records);
   });
 
   app.post("/api/records", (req, res) => {
-    const { name, price, calories, rating, notes, image_path, tags } = req.body;
+    const { name, price, calories, rating, notes, image_path, tags, timestamp } = req.body;
+    const recordTimestamp = timestamp || new Date().toISOString();
+    
     const info = db.prepare(`
-      INSERT INTO drink_records (name, price, calories, rating, notes, image_path, tags)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(name, price, calories, rating, notes, image_path, tags);
+      INSERT INTO drink_records (name, price, calories, rating, notes, image_path, tags, timestamp)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name, price, calories, rating, notes, image_path, tags, recordTimestamp);
     res.json({ id: info.lastInsertRowid });
   });
 

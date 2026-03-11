@@ -49,23 +49,37 @@ export default function App() {
   const fetchRecords = async () => {
     try {
       const res = await fetch('/api/records');
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Server error: ${res.status}. ${text.slice(0, 100)}`);
+      }
       const data = await res.json();
       setRecords(data);
     } catch (err) {
       console.error('Failed to fetch records:', err);
+      // You could add a toast here
     }
   };
 
   const handleAddRecord = async (data: any) => {
     try {
-      await fetch('/api/records', {
+      const res = await fetch('/api/records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      fetchRecords();
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to save: ${res.status}`);
+      }
+      
+      await fetchRecords();
+      return true;
     } catch (err) {
       console.error('Failed to add record:', err);
+      alert(err instanceof Error ? err.message : 'Failed to add record');
+      return false;
     }
   };
 
