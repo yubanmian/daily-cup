@@ -1,5 +1,7 @@
 {
-  "name": "Daily Cup",
+  "name": "CCCup",
   "description": "A minimalist and elegant daily beverage recording tool to track consumption habits, sugar, and calorie intake.",
-  "requestFramePermissions": ["camera"]
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
